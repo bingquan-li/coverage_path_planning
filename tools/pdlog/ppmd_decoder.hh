@@ -29,9 +29,9 @@ public:
 
   // nullopt 只表示读到格式结束符；还必须调用 validateEnd()。
   std::optional<std::uint8_t>
-  nextByte();
+  next_byte();
   void
-  validateEnd() const;
+  validate_end() const;
 
 private:
   struct Impl;

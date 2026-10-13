@@ -16,7 +16,7 @@ namespace
 Timestamp
 parse_timestamp(std::string const& text)
 {
-  auto const invalid = [&]()
+  auto const invalid = [&]
   { return std::invalid_argument("invalid timestamp: " + text); };
   if(text.size() != 19 || text[4] != '-' || text[7] != '-' || text[10] != ' ' ||
      text[13] != ':' || text[16] != ':')

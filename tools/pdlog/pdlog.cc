@@ -8,7 +8,7 @@
 
 // 命令行只选择配置文件。目录、时间范围和关键词集中在 YAML 中维护。
 int
-main(int argc, char** argv)
+main(int argc, char* const* argv)
 {
   char const* config_path =
       COVERAGE_PATH_PLANNING_SOURCE_DIR "/configs/pdlog.yaml";
@@ -66,10 +66,10 @@ main(int argc, char** argv)
 
   try
   {
-    pdlog::ConversionApplication application{std::move(config),
+    pdlog::ConversionApplication const application{std::move(config),
                                              stdout,
                                              std::cerr};
-    application.run();
+    auto const result = application.run();
     return 0;
   }
   catch(std::exception const& error)

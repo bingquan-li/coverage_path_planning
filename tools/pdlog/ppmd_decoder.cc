@@ -104,7 +104,7 @@ PpmdDecoder::PpmdDecoder(FILE* input,
 PpmdDecoder::~PpmdDecoder() = default;
 
 std::optional<std::uint8_t>
-PpmdDecoder::nextByte()
+PpmdDecoder::next_byte()
 {
   if(impl_->saw_end_marker)
   {
@@ -124,7 +124,7 @@ PpmdDecoder::nextByte()
 }
 
 void
-PpmdDecoder::validateEnd() const
+PpmdDecoder::validate_end() const
 {
   // 保留原有验证范围：不检查物理 EOF 或结束符后的多余数据。
   // Code == 0 不是校验和，不能保证识别所有截断或篡改。

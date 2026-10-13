@@ -1,5 +1,43 @@
 # pdlog 目录批量日志过滤
 
+## 单个 pdlog 的 local_map 回放
+
+`local_map` 复用 `pdlog` 的 PPMd8 读取器，流式解压单个文件，再解析每行
+日志前缀后的 JSON。只处理 `type` 严格等于 `local_map` 的对象；其 `data`
+再经过 Base64、gzip 和每格 2 bit 的解码。
+
+```bash
+cmake --build build/Debug --target local_map
+./build/Debug/tools/pdlog_build/local_map /path/to/xx.pdlog
+# 无界面导出，之后用 rerun 打开：
+./build/Debug/tools/pdlog_build/local_map /path/to/xx.pdlog --save /tmp/local_map.rrd
+rerun /tmp/local_map.rrd
+```
+
+`map_size` 是正方形地图的边长（格），`map_scale` 是米/格，`pos` 是地图中心
+及机器人位置。左下角由 `pos - map_size * map_scale / 2` 计算。沿用原示例的
+行序约定：解码后第 0 行位于底部。日志未提供旋转，地图按 world 轴对齐。
+
+地图使用单通道 `GridMap` 和 `Costmap` 配色，0 类透明。每条有效记录在
+`frame` 时间线上保存一帧，地图和机器人位置同步更新；`log_line` 时间线
+可定位原始文件的行号。默认 Blueprint 选择 `frame`，它表示记录顺序，
+不表示日志前缀中的实际时间间隔。
+
+损坏的 local_map 记录会打印文件名、行号并跳过；PPMd8 流损坏则终止。
+全部有效且至少输出一帧时返回 0，存在坏帧、没有地图或处理失败时返回 1，
+命令行错误返回 2。坏帧前后有效的数据仍可在已生成的记录中查看。
+输入输出不能指向同一个文件。
+
+构建需要 `nlohmann_json`、Zlib 和已有 Rerun SDK。默认 Blueprint 随源码提供，
+修改 `local_map_blueprint.py` 后用项目 Python 环境运行它以重新生成 `.rbl`。
+
+```bash
+cmake --build build/Debug --target local_map_log_test
+ctest --test-dir build/Debug -R '^local_map_log_test$' --output-on-failure
+```
+
+## 目录批量过滤
+
 编译并使用默认配置：
 
 ```bash

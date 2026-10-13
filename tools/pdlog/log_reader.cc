@@ -10,7 +10,7 @@ namespace pdlog
 namespace
 {
 detail::InputFile
-openInput(std::filesystem::path const& path)
+open_input(std::filesystem::path const& path)
 {
   detail::InputFile input{std::fopen(path.string().c_str(), "rb")};
   if(!input)
@@ -23,7 +23,7 @@ openInput(std::filesystem::path const& path)
 }
 
 PpmdParameters
-readHeader(FILE* input, std::filesystem::path const& path)
+read_header(FILE* input, std::filesystem::path const& path)
 {
   unsigned char header[2]{};
   if(std::fread(header, 1, sizeof(header), input) != sizeof(header))
@@ -34,7 +34,7 @@ readHeader(FILE* input, std::filesystem::path const& path)
                          (static_cast<unsigned>(header[1]) << 8U);
   PpmdParameters parameters{(value & 0x0FU) + 1U,
                             ((value >> 4U) & 0xFFU) + 1U,
-                            value >> 12U};
+                            value >> 12U,};
   if(parameters.order < 2 || parameters.restore_method > 1)
   {
     throw std::runtime_error(
@@ -49,9 +49,9 @@ readHeader(FILE* input, std::filesystem::path const& path)
 
 PdlogReader::PdlogReader(std::filesystem::path path)
   : path_(std::move(path))
-  , input_(openInput(path_))
+  , input_(open_input(path_))
   , decoder_(std::make_unique<PpmdDecoder>(
-        input_.get(), readHeader(input_.get(), path_), path_))
+        input_.get(), read_header(input_.get(), path_), path_))
 {}
 
 std::optional<LogLine>
@@ -59,12 +59,12 @@ PdlogReader::next_line()
 {
   if(reached_end_)
   {
-    decoder_->validateEnd();
+    decoder_->validate_end();
     return std::nullopt;
   }
 
   LogLine line{path_, line_number_ + 1, {}};
-  while(auto const byte = decoder_->nextByte())
+  while(auto const byte = decoder_->next_byte())
   {
     line.text.push_back(static_cast<char>(*byte));
     if(*byte == '\n')
@@ -81,13 +81,13 @@ PdlogReader::next_line()
     ++line_number_;
     return line;
   }
-  decoder_->validateEnd();
+  decoder_->validate_end();
   return std::nullopt;
 }
 
 TextLogReader::TextLogReader(std::filesystem::path path)
   : path_(std::move(path))
-  , input_(openInput(path_))
+  , input_(open_input(path_))
 {}
 
 std::optional<LogLine>
