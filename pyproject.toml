@@ -1,0 +1,26 @@
+[project]
+name = "coverage-path-planning"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "bingquan li", email = "bingquantum@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fiftyone>=1.22.1",
+    "matplotlib>=3.10.9",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "pyqt5>=5.15.11",
+    "pyqt6>=6.11.0",
+    "rerun-sdk[catalog]>=0.38.1",
+    "scikit-learn>=1.7.2",
+]
+
+[project.scripts]
+coverage-path-planning = "coverage_path_planning:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"

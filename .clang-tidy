@@ -31,6 +31,7 @@ Checks: >
   -concurrency-mt-unsafe,
   -modernize-use-designated-initializers,
   -bugprone-empty-catch,
+  -readability-identifier-naming,
 # 只对本项目自己的头文件报诊断。不设置时 clang-tidy 只看 .cc，公开头文件
 # 里的问题会被完全漏掉；设成 .* 又会把 Eigen 等三方头文件全算进来。
 HeaderFilterRegex: 'include/coverage_path_planning/.*'

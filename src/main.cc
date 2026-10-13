@@ -47,7 +47,7 @@ publish_demo()
       Eigen::Vector3d{0.4, 0.25, 0.0},
       Eigen::Vector3d{0.4, -0.25, 0.0},
       Eigen::Vector3d{-0.4, -0.25, 0.0},
-      Eigen::Vector3d{-0.4, 0.25, 0.0}};
+      Eigen::Vector3d{-0.4, 0.25, 0.0},};
 
   std::vector<Eigen::Vector3d> local_path;
   local_path.reserve(21);
@@ -63,7 +63,7 @@ publish_demo()
     }
     planning_viz::DrawContext const ctx{.stamp_ns =
                                             static_cast<std::uint64_t>(now),
-                                        .frame_id = "map"};
+                                        .frame_id = "map",};
     auto const angle = static_cast<double>(cycle) * angle_step;
     auto const x = radius * std::cos(angle);
     auto const y = radius * std::sin(angle);

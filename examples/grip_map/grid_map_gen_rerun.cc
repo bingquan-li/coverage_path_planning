@@ -67,7 +67,7 @@ make_gridmap()
                        {40, 300},
                        {100, 300},
                        {100, 200},
-                       {40, 200}};
+                       {40, 200},};
 
   cv::fillPoly(map, std::vector<Ring>{main_room}, cv::Scalar(255));
 
@@ -95,7 +95,7 @@ int
 main()
 {
   // 1. 创建记录流，启动本机 Rerun Viewer 并连接
-  rerun::RecordingStream rec("coverage_planner");
+  rerun::RecordingStream const rec("coverage_planner");
   rec.spawn().exit_on_failure();
   cv::Mat const map = make_gridmap();
 
@@ -136,7 +136,7 @@ main()
 
 
   // 5. 退出前等待缓冲数据发送完成
-  auto result = rec.flush_blocking();
+  auto const result = rec.flush_blocking();
 
   return 0;
 }

@@ -25,3 +25,8 @@ target_link_libraries(min_square
     PRIVATE
     coverage_path_planning::rerun
 )
+add_executable(later_error later_error.cc)
+target_link_libraries(later_error
+    PRIVATE
+    coverage_path_planning::rerun
+)

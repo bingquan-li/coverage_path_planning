@@ -46,3 +46,10 @@ if(COVERAGE_ENABLE_SANITIZERS)
 else()
   gtest_discover_tests(path_smoother_test)
 endif()
+
+
+add_executable(fox_backcall fox_backcall.cc)
+target_link_libraries(fox_backcall
+    PRIVATE
+    foxglove_cpp
+)

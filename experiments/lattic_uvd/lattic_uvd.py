@@ -695,7 +695,7 @@ def main():
             [],
             color=colors[group_id],
             lw=3,
-            label=f"UVD {group_id + 1} ({len(group)} paths)",
+            label=f"Homotopy {group_id + 1} ({len(group)} paths)",
         )
 
     scene_handles = [
@@ -733,10 +733,10 @@ def main():
         layout="constrained",
     )
     if fig_all.canvas.manager is not None:
-        fig_all.canvas.manager.set_window_title("SL UVD - All classes")
+        fig_all.canvas.manager.set_window_title("SL Homotopy - All classes")
 
     fig_all.suptitle(
-        "SL lattice sampling — UVD classes",
+        "SL lattice sampling — Homotopy classes",
         fontsize=17,
         fontweight="bold",
     )
@@ -758,7 +758,7 @@ def main():
 
     ax_all.set_title(
         f"{len(free)} collision-free paths | "
-        f"{group_count} UVD classes | "
+        f"{group_count} Homotopy classes | "
         f"{len(blocked)} blocked connections",
         loc="left",
         fontsize=11,
@@ -792,10 +792,10 @@ def main():
         layout="constrained",
     )
     if fig_groups.canvas.manager is not None:
-        fig_groups.canvas.manager.set_window_title("SL UVD - Individual classes")
+        fig_groups.canvas.manager.set_window_title("SL Homotopy - Individual classes")
 
     fig_groups.suptitle(
-        "Individual UVD classes",
+        "Individual Homotopy classes",
         fontsize=17,
         fontweight="bold",
     )
@@ -813,7 +813,7 @@ def main():
             draw_group(ax, group, color)
 
             ax.set_title(
-                f"UVD class {group_id + 1} — {len(group)} paths",
+                f"Homotopy class {group_id + 1} — {len(group)} paths",
                 color=color,
                 fontsize=12,
                 fontweight="bold",
@@ -831,7 +831,7 @@ def main():
 
     # ------------------ 保存与显示 ------------------
 
-    print(f"UVD 类别数：{group_count}")
+    print(f"Homotopy 类别数：{group_count}")
     for group_id, group in enumerate(uvd_paths, start=1):
         print(f"  类别 {group_id}：{len(group)} 条轨迹")
 

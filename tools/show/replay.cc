@@ -50,7 +50,7 @@ publish_robot(Frame const& frame,
       .position = frame.state.position,
       .yaw = frame.state.yaw,
       .linear_velocity = frame.state.linear_velocity,
-      .angular_velocity = frame.state.angular_velocity};
+      .angular_velocity = frame.state.angular_velocity,};
   planning_viz::odometry(odom, ctx);
 
   auto const vertices = make_footprint(frame.state, footprint);
@@ -120,7 +120,7 @@ replay(Options const& options,
                          .count();
     last_stamp = std::max(last_stamp + 1, static_cast<std::uint64_t>(now));
     return planning_viz::DrawContext{.stamp_ns = last_stamp,
-                                     .frame_id = options.frame_id};
+                                     .frame_id = options.frame_id,};
   };
   auto const publish_trail = [&](planning_viz::DrawContext ctx)
   {
@@ -141,7 +141,7 @@ replay(Options const& options,
                               .squeegee = cleaning.squeegee,
                               .wet_triangles = snapshot.wet_triangles,
                               .wet_boundary_lines = snapshot.wet_boundary_lines,
-                              .suction = options.suction},
+                              .suction = options.suction,},
                              ctx);
   };
 

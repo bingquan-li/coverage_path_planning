@@ -29,9 +29,9 @@ log_trajectory(rerun::RecordingStream const& rec,
 
   for(auto const& pose : trajectory)
   {
-    float const x = static_cast<float>(pose.x);
-    float const y = static_cast<float>(pose.y);
-    float const yaw = static_cast<float>(pose.yaw);
+    auto const x = static_cast<float>(pose.x);
+    auto const y = static_cast<float>(pose.y);
+    auto const yaw = static_cast<float>(pose.yaw);
 
     points.emplace_back(x, y, 0.0F);
     origins.emplace_back(x, y, 0.0F);
@@ -91,8 +91,8 @@ int
 main()
 {
   rerun::RecordingStream const rec("pose_trajectory_demo");
-  rec.spawn().exit_on_failure();
-
+  // rec.spawn().exit_on_failure();
+  rec.connect_grpc("rerun+http://192.168.171.203:9876/proxy").handle();
   // 世界坐标系：X 向右、Y 向前、Z 向上。
   rec.log_static("world", rerun::ViewCoordinates::RIGHT_HAND_Z_UP);
 

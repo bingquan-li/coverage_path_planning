@@ -11,7 +11,7 @@ namespace coverage_path_planning
 RobotModelHelper const&
 RobotModelHelper::instance()
 {
-  static RobotModelHelper helper;
+  static RobotModelHelper const helper;
   return helper;
 }
 
@@ -20,7 +20,7 @@ RobotModelHelper::RobotModelHelper()
 {
   auto const path = std::filesystem::path(COVERAGE_PATH_PLANNING_SOURCE_DIR) /
                     "data/robot.yaml";
-  auto config = YAML::LoadFile(path.string());
+  auto const config = YAML::LoadFile(path.string());
   log::info("RobotConfig:{}", YAML::Dump(config));
   robot_config_ = config.as<RobotConfig>();
 }

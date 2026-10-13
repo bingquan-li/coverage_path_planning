@@ -99,7 +99,7 @@ LogParser::next(Event& event)
         {
           continue;
         }
-        state_ = next_state;
+        state_ = std::move(next_state);
         has_pose_ = true;
         event = Event{Frame{state_, clock}, true};
       }

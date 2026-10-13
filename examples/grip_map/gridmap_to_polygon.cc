@@ -42,7 +42,7 @@ make_gridmap()
                        {40, 300},
                        {100, 300},
                        {100, 200},
-                       {40, 200}};
+                       {40, 200},};
   cv::fillPoly(map, std::vector<Ring>{main_room}, cv::Scalar(255));
   cv::rectangle(map, {550, 50}, {675, 425}, cv::Scalar(255), cv::FILLED);
   // Internal obstacles become holes of their respective free-space polygons.
@@ -201,7 +201,7 @@ make_preview(cv::Mat const& map, std::vector<Polygon> const& polygons)
                   cv::Scalar(248, 248, 248));
   original.copyTo(preview(cv::Rect(10, 50, map.cols, map.rows)));
   overlay.copyTo(preview(cv::Rect(map.cols + 20, 50, map.cols, map.rows)));
-  auto label =
+  auto const label =
       [&](std::string const& text, cv::Point position, cv::Scalar color)
   {
     cv::putText(preview,
@@ -237,7 +237,7 @@ save_image(std::filesystem::path const& path, cv::Mat const& image)
 } // namespace
 
 int
-main(int argc, char** argv)
+main(int argc, char* const* argv)
 {
   try
   {

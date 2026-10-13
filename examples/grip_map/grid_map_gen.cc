@@ -40,7 +40,7 @@ make_gridmap()
                        {40, 300},
                        {100, 300},
                        {100, 200},
-                       {40, 200}};
+                       {40, 200},};
   //  会把这些点连接成一个多边形
   cv::fillPoly(map, std::vector<Ring>{main_room}, cv::Scalar(255));
   cv::rectangle(map, {550, 50}, {675, 425}, cv::Scalar(255), cv::FILLED);
@@ -66,7 +66,7 @@ main()
   options.host = "0.0.0.0";
   options.port = 8765;
 
-  auto server = foxglove::WebSocketServer::create(std::move(options)).value();
+  auto const server = foxglove::WebSocketServer::create(std::move(options)).value();
 
   // 2. 创建图像 channel
   auto image_channel =

@@ -32,7 +32,7 @@ local_cleaning_footprint(double expansion = 0.0)
   result.cloth = {{-brush_rear_m - half_contact, -half_width, 0.0},
                   {-brush_rear_m - half_contact, half_width, 0.0},
                   {-brush_rear_m + half_contact, half_width, 0.0},
-                  {-brush_rear_m + half_contact, -half_width, 0.0}};
+                  {-brush_rear_m + half_contact, -half_width, 0.0},};
   auto const half = squeegee_width_m / 2.0;
   auto const h = cad_distance_m - squeegee_rear_m;
   auto const radius = (half * half + h * h) / (2.0 * h);
@@ -74,17 +74,17 @@ make_cleaning_footprint(RobotState const& state)
 
 struct WaterLeakSimulation::Impl
 {
-  double min_x;
-  double min_y;
-  double ground_z;
-  bool suction;
+  double min_x{};
+  double min_y{};
+  double ground_z{};
+  bool suction{};
   cv::Mat wet;
   cv::Mat covered;
   CleaningFootprint local =
-      local_cleaning_footprint(cell_m * std::sqrt(2.0) / 2.0);
+      local_cleaning_footprint(cell_m * std::numbers::sqrt2 / 2.0);
   std::optional<Frame> previous;
 
-  std::vector<cv::Point>
+  [[nodiscard]] std::vector<cv::Point>
   pixels(Polygon const& polygon, RobotState const& state) const
   {
     std::vector<cv::Point> result;
@@ -108,7 +108,7 @@ struct WaterLeakSimulation::Impl
     {
       auto const arc = pixels(local.squeegee, state);
       auto const thickness = static_cast<int>(
-          std::ceil((suction_stroke_m + cell_m * std::sqrt(2.0)) / cell_m));
+          std::ceil((suction_stroke_m + cell_m * std::numbers::sqrt2) / cell_m));
       cv::polylines(wet, arc, false, cv::Scalar(0), thickness, cv::LINE_8);
     }
   }
@@ -236,7 +236,8 @@ WaterLeakSimulation::snapshot() const
     std::size_t label;
     std::size_t rectangle;
   };
-  std::vector<std::size_t> parent, sizes;
+  std::vector<std::size_t> parent;
+  std::vector<std::size_t> sizes;
   std::vector<cv::Rect> rectangles;
   auto const root = [&](std::size_t i)
   {
@@ -356,7 +357,7 @@ WaterLeakSimulation::snapshot() const
                                  {x1, y1, z},
                                  {x0, y0, z},
                                  {x1, y1, z},
-                                 {x0, y1, z}});
+                                 {x0, y1, z},});
   }
   return result;
 }

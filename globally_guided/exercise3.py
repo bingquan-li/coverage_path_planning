@@ -52,9 +52,11 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import numpy as np
 from graph import Graph
-from tracking import IdAllocator
+from tracking import IdAllocator, segment_trajectory
 from world import State, Trajectory, World
 
 
@@ -77,7 +79,14 @@ def advance_world(world: World, h: float) -> World:
 
     h = 0 时应该原样返回（内容相等即可，不要求是同一个对象）。
     """
-    raise NotImplementedError("advance_world 还没写")
+    # obstacles: list[Obstacle] = []
+    # for obs in world.obstacles:
+    #     obstacles.append(Obstacle(obs.at(h), obs.velocity, obs.radius))
+    # return World(tuple(obstacles))
+    obstacles = tuple(
+        dataclasses.replace(obs, position=obs.at(h)) for obs in world.obstacles
+    )
+    return dataclasses.replace(world, obstacles=obstacles)
 
 
 def shift_state(x: State, h: float) -> State | None:
@@ -95,7 +104,9 @@ def shift_state(x: State, h: float) -> State | None:
 
     写成 t - h < 0 不会报错，只会让你的图里常年挂着一批没用的节点。
     """
-    raise NotImplementedError("shift_state 还没写")
+    if x.t - h <= 0:
+        return None
+    return State(x.x, x.y, x.t - h)
 
 
 def carry_connector(prev_graph: Graph, connector_id: int, h: float) -> State | None:
@@ -122,7 +133,18 @@ def carry_connector(prev_graph: Graph, connector_id: int, h: float) -> State | N
     结果是节点活下来了、身份没跟上：复用生效但编号照跳。这是本阶段最难查的一个 bug，
     因为图看起来完全正常。把它单独抽成一个函数就是为了堵这个洞。
     """
-    raise NotImplementedError("carry_connector 还没写")
+    connector_state = prev_graph.state(connector_id)
+    shift_connect = shift_state(connector_state, h)
+    if shift_connect is not None:
+        return shift_connect
+
+    seg_traj = segment_trajectory(prev_graph, connector_id)
+    mid = seg_traj.at(0.5)
+
+    shift_connect = shift_state(mid, h)
+    if shift_connect is not None:
+        return shift_connect
+    return None
 
 
 def reintroduce_states(prev_graph: Graph, world: World, h: float) -> list[State]:
@@ -162,9 +184,12 @@ def reintroduce_states(prev_graph: Graph, world: World, h: float) -> list[State]
     Returns:
         待注入的 State 列表，guard 在前、connector 在后。
     """
+    
+    
     raise NotImplementedError("reintroduce_states 还没写")
 
 
+# 优先尝试的采样点：上一帧的数据
 def build_prm_warm(
     world: World,
     start: State,

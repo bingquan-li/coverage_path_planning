@@ -32,7 +32,7 @@ shutdown(std::string& error)
 void
 global_path(Points3 points, DrawContext ctx)
 {
-  backend().globalPath(points, ctx);
+  backend().global_path(points, ctx);
 }
 
 void
@@ -80,7 +80,7 @@ odometry(RobotOdometry const& state, DrawContext ctx)
 void
 clear_local_path(DrawContext ctx)
 {
-  backend().clearLocalPath(ctx);
+  backend().clear_local_path(ctx);
 }
 
 } // namespace planning_viz

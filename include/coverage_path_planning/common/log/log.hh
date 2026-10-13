@@ -128,7 +128,7 @@ inline void
 initialize(Options const& options = {})
 {
   auto replacement = detail::make_logger(options);
-  std::lock_guard<std::mutex> lock(detail::mutex());
+  std::scoped_lock const lock(detail::mutex());
   detail::current() = std::move(replacement);
 }
 
@@ -136,7 +136,7 @@ initialize(Options const& options = {})
 inline std::shared_ptr<spdlog::logger>
 get()
 {
-  std::lock_guard<std::mutex> lock(detail::mutex());
+  std::scoped_lock const lock(detail::mutex());
   auto& current = detail::current();
   if(!current)
   {

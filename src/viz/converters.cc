@@ -21,7 +21,7 @@ to_message_timestamp(std::uint64_t stamp_ns)
   }
   return msg::Timestamp{
       .sec = static_cast<std::uint32_t>(seconds),
-      .nsec = static_cast<std::uint32_t>(stamp_ns % ns_per_second)};
+      .nsec = static_cast<std::uint32_t>(stamp_ns % ns_per_second),};
 }
 
 msg::SceneUpdate

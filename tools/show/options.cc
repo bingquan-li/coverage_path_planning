@@ -40,7 +40,7 @@ load_options()
     {
       throw std::invalid_argument("show.yaml contains an empty path");
     }
-    auto path = std::filesystem::path(text);
+    auto const path = std::filesystem::path(text);
     return (path.is_absolute() ? path : project_root / path).lexically_normal();
   };
 

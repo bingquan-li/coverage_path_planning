@@ -76,7 +76,7 @@ readOutput(FILE* file)
 {
   std::rewind(file);
   std::string result;
-  for(int byte; (byte = std::fgetc(file)) != EOF;)
+  for(int byte = 0; (byte = std::fgetc(file)) != EOF;)
   {
     result.push_back(static_cast<char>(byte));
   }
@@ -96,7 +96,7 @@ checkReaders(std::filesystem::path const& root)
   std::vector<std::filesystem::path> started;
   pdlog::LogSequenceReader reader{{{first, {}, pdlog::InputFormat::Text},
                                    {empty, {}, pdlog::InputFormat::Text},
-                                   {last, {}, pdlog::InputFormat::Text}},
+                                   {last, {}, pdlog::InputFormat::Text},},
                                   [&](pdlog::LogFile const& file)
                                   { started.push_back(file.path); }};
   auto line1 = reader.next_line();
@@ -122,7 +122,7 @@ checkReaders(std::filesystem::path const& root)
 
   auto const missing = root / "missing";
   pdlog::LogSequenceReader failed{{{missing, {}, pdlog::InputFormat::Text},
-                                   {last, {}, pdlog::InputFormat::Text}}};
+                                   {last, {}, pdlog::InputFormat::Text},}};
   throwsContaining([&] { failed.next_line(); }, "cannot open");
   require(failed.filesProcessed() == 0,
           "failed file must not be counted/skipped");
@@ -135,7 +135,7 @@ checkReaders(std::filesystem::path const& root)
   require(!empty_compressed.next_line() && !empty_compressed.next_line(),
           "valid compressed empty stream");
   pdlog::LogSequenceReader mixed{{{compressed, {}, pdlog::InputFormat::Pdlog},
-                                  {last, {}, pdlog::InputFormat::Text}}};
+                                  {last, {}, pdlog::InputFormat::Text},}};
   auto mixed_line = mixed.next_line();
   require(mixed_line && mixed_line->text == "last\n" && !mixed.next_line() &&
               mixed.filesProcessed() == 2,
@@ -153,15 +153,15 @@ checkReaders(std::filesystem::path const& root)
       },
       "truncated or invalid stream");
   put(compressed, "");
-  throwsContaining([&] { pdlog::PdlogReader r{compressed}; }, "invalid header");
+  throwsContaining([&] { pdlog::PdlogReader const r{compressed}; }, "invalid header");
   put(compressed, std::string("\0\0", 2));
-  throwsContaining([&] { pdlog::PdlogReader r{compressed}; },
+  throwsContaining([&] { pdlog::PdlogReader const r{compressed}; },
                    "unsupported PPMd8");
   put(compressed, std::string("\x07\0\xff\xff\xff\xff", 6));
   // 重复触发分配后的初始化失败，供 ASan/LSan 检查构造失败时的清理。
   for(int iteration = 0; iteration < 8; ++iteration)
   {
-    throwsContaining([&] { pdlog::PdlogReader r{compressed}; },
+    throwsContaining([&] { pdlog::PdlogReader const r{compressed}; },
                      "invalid PPMd8 range");
   }
 }
@@ -171,7 +171,7 @@ checkApplication(std::filesystem::path const& root)
 {
   auto const logs = root / "logs";
   std::filesystem::create_directory(logs);
-  auto name = [&](std::string const& time, std::string const& id)
+  auto const name = [&](std::string const& time, std::string const& id)
   { return logs / ("NavigationService.g3log." + time + "." + id + ".log"); };
   put(name("20270101-000059", "2"), "KEEP last");
   put(name("20270101-000000", "20"), "skip\n");
@@ -205,7 +205,7 @@ checkApplication(std::filesystem::path const& root)
           "invalid filename diagnostic");
   pdlog::detail::InputFile output{std::tmpfile()};
   require(bool(output), "tmpfile");
-  pdlog::ConversionApplication app{config, output.get(), diagnostics};
+  pdlog::ConversionApplication const app{config, output.get(), diagnostics};
   auto const report = app.run();
   require(readOutput(output.get()) == "KEEP first\nKEEP middle\r\nKEEP last",
           "cross-file separator / filtered files");
@@ -266,7 +266,7 @@ checkApplication(std::filesystem::path const& root)
       "output must not be null");
 
   for(auto const& bad : {std::string("input_format: unknown\n"),
-                         std::string("input_format: null\n")})
+                         std::string("input_format: null\n"),})
   {
     put(config_path,
         "input_dir: logs\ntime_range: {start: null, end: null}\nkeywords: "
@@ -292,7 +292,7 @@ main()
 {
   try
   {
-    TemporaryDirectory directory;
+    TemporaryDirectory const directory;
     checkReaders(directory.path);
     checkApplication(directory.path);
     std::cout << "pdlog reader/application checks passed\n";

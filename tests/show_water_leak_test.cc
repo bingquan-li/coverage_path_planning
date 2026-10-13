@@ -2,7 +2,7 @@
 #include "../tools/show/replay.hh"
 #include "coverage_path_planning/viz/converters.hh"
 
-#include <math.h>
+#include <cmath>
 
 #include <cmath>
 #include <filesystem>
@@ -65,7 +65,7 @@ unit_tests()
 {
   std::vector<show::Frame> frames{pose(0, 0, 0),
                                   pose(1000, .5, 0),
-                                  pose(2000, 1, 0)};
+                                  pose(2000, 1, 0),};
   show::WaterLeakSimulation sim(frames);
   check(sim.snapshot().wet_area_m2 == 0.0,
         "future poses must not deposit water");
@@ -131,10 +131,10 @@ unit_tests()
         "cloth uses the wheel axle and heading");
   check(std::abs(cleaning.squeegee.front().y() - (2 - .161187875)) < 1e-12,
         "squeegee endpoint must match CAD");
-  planning_viz::WaterLeakView view{cleaning.cloth,
+  planning_viz::WaterLeakView const view{cleaning.cloth,
                                    cleaning.squeegee,
                                    forward.wet_triangles,
-                                   forward.wet_boundary_lines};
+                                   forward.wet_boundary_lines,};
   auto const scene =
       planning_viz::detail::make_water_leak_update(view, "map", 1);
   check(scene.entities.size() == 3,
@@ -156,7 +156,7 @@ unit_tests()
     check(entity.texts.empty(),
           "water leak visualization must not show statistics text");
   }
-  auto const empty = planning_viz::detail::make_water_leak_update({}, "map", 2);
+  auto const empty = planning_viz::detail::make_water_leak_update({} "map", 2);
   check(empty.entities.empty() && empty.deletions.size() == 3,
         "empty state clears all entities");
 
@@ -164,7 +164,7 @@ unit_tests()
   try
   {
     std::vector<show::Frame> huge{pose(0, 0, 0), pose(1, 1e10, 1e10)};
-    show::WaterLeakSimulation invalid(huge);
+    show::WaterLeakSimulation const invalid(huge);
   }
   catch(std::runtime_error const&)
   {
@@ -175,7 +175,7 @@ unit_tests()
 } // namespace
 
 int
-main(int argc, char** argv)
+main(int argc, char* const* argv)
 {
   try
   {

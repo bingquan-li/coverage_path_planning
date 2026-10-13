@@ -20,10 +20,16 @@ target_link_libraries(pdlog_test PRIVATE pdlog_core)
 find_package(ZLIB REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
-add_library(local_map_log STATIC local_map_log.cc)
+add_library(local_map_log STATIC local_map_log.cc navigation_log.cc)
 target_link_libraries(local_map_log PUBLIC ZLIB::ZLIB
     PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(local_map_log PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_library(local_map_export_lib STATIC frame_export.cc)
+target_link_libraries(local_map_export_lib PUBLIC
+    pdlog_core local_map_log nlohmann_json::nlohmann_json)
+add_executable(local_map_export local_map_export.cc)
+target_link_libraries(local_map_export PRIVATE local_map_export_lib)
 
 add_executable(local_map local_map_test.cc)
 target_link_libraries(local_map PRIVATE
@@ -41,4 +47,13 @@ if(COVERAGE_BUILD_TESTS)
     add_executable(local_map_log_test ../../tests/local_map_log_test.cc)
     target_link_libraries(local_map_log_test PRIVATE local_map_log nlohmann_json::nlohmann_json)
     add_test(NAME local_map_log_test COMMAND local_map_log_test)
+    add_executable(navigation_log_test ../../tests/navigation_log_test.cc)
+    target_link_libraries(navigation_log_test PRIVATE local_map_log)
+    add_test(NAME navigation_log_test COMMAND navigation_log_test)
+    add_executable(frame_export_test ../../tests/frame_export_test.cc)
+    target_link_libraries(frame_export_test PRIVATE local_map_export_lib)
+    add_test(NAME frame_export_test COMMAND frame_export_test)
+    add_executable(global_paths_log_test ../../tests/global_paths_log_test.cc)
+    target_link_libraries(global_paths_log_test PRIVATE local_map_log nlohmann_json::nlohmann_json)
+    add_test(NAME global_paths_log_test COMMAND global_paths_log_test)
 endif()

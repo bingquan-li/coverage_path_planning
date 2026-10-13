@@ -52,7 +52,7 @@ std::vector<Cell> const free_cells = {
 struct CellId
 {
   CellId() = default;
-  CellId(std::size_t _value)
+  explicit CellId(std::size_t _value)
     : value(_value)
   {}
   auto
@@ -113,19 +113,19 @@ subcells(Cell const& cell)
   return {
       {SubCellDirection::NW, Cell{.row = 2 * cell.row, .col = 2 * cell.col}},
       {SubCellDirection::NE,
-       Cell{.row = 2 * cell.row, .col = 2 * cell.col + 1}},
+       Cell{.row = 2 * cell.row, .col = 2 * cell.col + 1},},
       {SubCellDirection::SW,
-       Cell{.row = 2 * cell.row + 1, .col = 2 * cell.col}},
+       Cell{.row = 2 * cell.row + 1, .col = 2 * cell.col},},
       {SubCellDirection::SE,
-       Cell{.row = 2 * cell.row + 1, .col = 2 * cell.col + 1}},
+       Cell{.row = 2 * cell.row + 1, .col = 2 * cell.col + 1},},
   };
 }
 
 TreeDirection
 get_direction(Cell const& from, Cell const& to)
 {
-  int dr = to.row - from.row;
-  int dc = to.col - from.col;
+  int const dr = to.row - from.row;
+  int const dc = to.col - from.col;
 
   if(dr == -1 && dc == 0)
   {
@@ -182,7 +182,7 @@ std::array<InnerEdge, 4> const inner_edges = {{
     {TreeDirection::S, SubCellDirection::SW, SubCellDirection::SE},
     {TreeDirection::W, SubCellDirection::NW, SubCellDirection::SW},
     {TreeDirection::E, SubCellDirection::NE, SubCellDirection::SE},
-}};
+},};
 
 
 // ---------- 2. 基础转换函数 ----------
@@ -465,13 +465,13 @@ run(fmsg::SceneUpdate& update)
   subs_cell_entity.id = "subs_cell";
   subs_cell_entity.frame_id = "map";
   subs_cell_entity.lifetime = fmsg::Duration{};
-  fmsg::Color color = rgba(0.0, 0.0, 1.0, 0.2);
+  fmsg::Color const color = rgba(0.0, 0.0, 1.0, 0.2);
 
   fmsg::SceneEntity edge_entity;
   edge_entity.id = "edge_entity";
   edge_entity.frame_id = "map";
   edge_entity.lifetime = fmsg::Duration{};
-  fmsg::Color edge_entity_color = rgba(0.0, 1.0, 0.0, 1.0);
+  fmsg::Color const edge_entity_color = rgba(0.0, 1.0, 0.0, 1.0);
 
 
   std::map<Cell, std::vector<Cell>> adj;
@@ -566,7 +566,7 @@ run(fmsg::SceneUpdate& update)
       pairs = {{
           {SubCellDirection::NE, SubCellDirection::NW},
           {SubCellDirection::SE, SubCellDirection::SW},
-      }};
+      },};
     }
     // 竖直相邻
     else
@@ -587,7 +587,7 @@ run(fmsg::SceneUpdate& update)
       pairs = {{
           {SubCellDirection::SW, SubCellDirection::NW},
           {SubCellDirection::SE, SubCellDirection::NE},
-      }};
+      },};
     }
     auto const su = subcells(u);
     auto const sv = subcells(v);
@@ -616,7 +616,7 @@ run(fmsg::SceneUpdate& update)
   path_entity.id = "path_entity";
   path_entity.frame_id = "map";
   path_entity.lifetime = fmsg::Duration{};
-  fmsg::Color path_entity_color = rgba(0.0, 0.0, 1.0, 1.0);
+  fmsg::Color const path_entity_color = rgba(0.0, 0.0, 1.0, 1.0);
 
   Cell const head = adj.begin()->first;
   std::vector<Cell> path;
@@ -684,7 +684,7 @@ main()
     return 1;
   }
 
-  auto server = std::move(server_result.value());
+  auto const server = std::move(server_result.value());
 
   auto channel_result = fmsg::SceneUpdateChannel::create("/coverage/debug");
 

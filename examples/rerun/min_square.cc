@@ -16,7 +16,7 @@ main()
   rec.spawn().exit_on_failure();
 
   // 设置曲线样式：样式固定，因此使用 log_static。
-  auto style = [&](char const* path, char const* name, rerun::Rgba32 color)
+  auto const style = [&](char const* path, char const* name, rerun::Rgba32 color)
   {
     rec.log_static(
         path,
@@ -51,10 +51,10 @@ main()
 
   auto objective = [](double value) { return (value - 3.0) * (value - 3.0); };
 
-  auto gradient = [](double value) { return 2.0 * (value - 3.0); };
+  auto const gradient = [](double value) { return 2.0 * (value - 3.0); };
 
   // 在当前迭代位置记录参数和损失。
-  auto log_state = [&]()
+  auto const log_state = [&]
   {
     rec.log("adam/parameter/x", rerun::Scalars(x));
     rec.log("adam/parameter/target", rerun::Scalars(3.0));

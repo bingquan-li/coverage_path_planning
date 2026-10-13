@@ -1,6 +1,0 @@
-# third_party/ 下是外部代码，不按本项目的规约检查。
-#
-# 构建时 clang-tidy 只挂在本项目自己的目标上，本文件是给编辑器（clangd）和
-# run-clang-tidy 这类直接遍历 compile_commands.json 的工具兜底：它们不认识
-# CMake 的目标边界，只会沿目录往上找最近的 .clang-tidy。
-Checks: '-*'

@@ -55,11 +55,9 @@ compile_commands.json
 # Temporary files
 *.tmp
 *.log
-*.pdlog
 *.bak
 *.swp
 *.mcap
-/pdlog/
 
 # vcpkg
 vcpkg_installed/
@@ -70,3 +68,5 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+__pycache__/
+*.py[cod]

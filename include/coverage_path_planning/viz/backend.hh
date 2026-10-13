@@ -3,51 +3,42 @@
 #include "coverage_path_planning/viz/viz.hh"
 
 #include <foxglove/context.hpp>
+#include <foxglove/mcap.hpp>
 #include <foxglove/messages.hpp>
 #include <foxglove/websocket.hpp>
-#include <foxglove/mcap.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <optional>
 
+namespace planning_viz::detail {
 
-namespace planning_viz::detail
-{
-
-class Backend
-{
+class Backend {
 public:
-  bool
-  init(Config const&, std::string& error);
-  bool
-  shutdown(std::string& error);
+  bool init(Config const & /*config*/, std::string &error);
+  bool shutdown(std::string &error);
 
-  void globalPath(Points3, DrawContext);
-  void local_path(Points3, DrawContext);
-  void history_path(Points3, DrawContext);
-  void trajectory(Points3, DrawContext);
-  void trajectory_footprints(std::span<Points3 const>, DrawContext);
-  void footprint(Points3, DrawContext);
-  void
-  water_leak(WaterLeakView const&, DrawContext);
-  void
-  odometry(RobotOdometry const&, DrawContext);
+  void global_path(Points3 /*points*/, DrawContext /*ctx*/);
+  void local_path(Points3 /*points*/, DrawContext /*ctx*/);
+  void history_path(Points3 /*segments*/, DrawContext /*ctx*/);
+  void trajectory(Points3 /*points*/, DrawContext /*ctx*/);
+  void trajectory_footprints(std::span<Points3 const> /*polygons*/, DrawContext /*ctx*/);
+  void footprint(Points3 /*vertices*/, DrawContext /*ctx*/);
+  void water_leak(WaterLeakView const & /*view*/, DrawContext /*ctx*/);
+  void odometry(RobotOdometry const & /*state*/, DrawContext /*ctx*/);
 
-  void clearLocalPath(DrawContext);
+  void clear_local_path(DrawContext /*ctx*/);
 
 private:
   using SceneChannel = foxglove::messages::SceneUpdateChannel;
 
-  struct PublicationState
-  {
+  struct PublicationState {
     std::mutex mutex;
     std::optional<std::uint64_t> last_stamp;
   };
 
-  struct Resources
-  {
+  struct Resources {
     Config config;
 
     foxglove::Context context = foxglove::Context::create();
@@ -73,40 +64,26 @@ private:
     PublicationState odometry_state;
   };
 
-  static void
-  publish_line(SceneChannel& channel,
-               PublicationState& state,
-               Config const& config,
-               Points3 points,
-               DrawContext ctx,
-               std::string_view entity_id,
-               foxglove::messages::Color color,
-               double width_m,
-               bool closed,
-               char const* operation) noexcept;
+  static void publish_line(SceneChannel &channel, PublicationState &state,
+                           Config const &config, Points3 points,
+                           DrawContext ctx, std::string_view entity_id,
+                           foxglove::messages::Color color, double width_m,
+                           bool closed, char const *operation) noexcept;
 
-  static void
-  publish_lines(SceneChannel& channel,
-                PublicationState& state,
-                Config const& config,
-                std::span<Points3 const> lines,
-                DrawContext ctx,
-                std::string_view entity_id,
-                foxglove::messages::Color color,
-                double width_m,
-                bool closed,
-                char const* operation) noexcept;
+  static void publish_lines(SceneChannel &channel, PublicationState &state,
+                            Config const &config,
+                            std::span<Points3 const> lines, DrawContext ctx,
+                            std::string_view entity_id,
+                            foxglove::messages::Color color, double width_m,
+                            bool closed, char const *operation) noexcept;
 
-  static void
-  publish_path(foxglove::messages::PosesInFrameChannel& channel,
-               PublicationState& state,
-               Config const& config,
-               Points3 lines,
-               DrawContext ctx,
-               char const* operation);
+  static void publish_path(foxglove::messages::PosesInFrameChannel &channel,
+                           PublicationState &state, Config const &config,
+                           Points3 lines, DrawContext ctx,
+                           char const *operation);
 
-  bool initialized_ = false;
-  std::unique_ptr<Resources> resources_;
+  bool initialized = false;
+  std::unique_ptr<Resources> resources;
 };
 
 } // namespace planning_viz::detail

@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <numbers>
 #include <rerun.hpp>
 
@@ -143,7 +145,7 @@ logHeadings(rerun::RecordingStream const& rec,
 
     vectors.emplace_back(length * static_cast<float>(std::cos(pose.yaw)),
                          length * static_cast<float>(std::sin(pose.yaw)),
-                         0.0f);
+                         0.0F);
 
     accumulated_distance = 0.0;
     last_yaw = pose.yaw;
@@ -153,7 +155,7 @@ logHeadings(rerun::RecordingStream const& rec,
           rerun::Arrows3D::from_vectors(vectors)
               .with_origins(origins)
               .with_colors({color})
-              .with_radii({0.008f}));
+              .with_radii({0.008F}));
 }
 
 void
@@ -161,17 +163,17 @@ logRobot(rerun::RecordingStream const& rec, Pose2D const& pose)
 {
   rec.log("world/robot/footprint",
           rerun::LineStrips3D({
-                                  rerun::LineStrip3D(footprint(pose, 0.05f)),
+                                  rerun::LineStrip3D(footprint(pose, 0.05F)),
                               })
               .with_colors({rerun::Color(255, 220, 60)})
-              .with_radii({0.015f}));
+              .with_radii({0.015F}));
 
   logHeadings(rec,
               "world/robot/heading",
               Path{pose},
               rerun::Color(255, 220, 60),
-              0.40f,
-              0.06f);
+              0.40F,
+              0.06F);
 }
 
 void
@@ -179,15 +181,16 @@ logHistory(rerun::RecordingStream const& rec, std::deque<Pose2D> const& poses)
 {
   std::vector<rerun::LineStrip3D> strips;
 
-  for(auto const& pose : poses)
+  strips.reserve(poses.size());
+for(auto const& pose : poses)
   {
-    strips.emplace_back(footprint(pose, 0.015f));
+    strips.emplace_back(footprint(pose, 0.015F));
   }
 
   rec.log("world/history/footprints",
           rerun::LineStrips3D(strips)
               .with_colors({rerun::Color(160, 185, 170, 80)})
-              .with_radii({0.005f}));
+              .with_radii({0.005F}));
 }
 
 // 示例全局路径：y = 0.5 sin(x)。
@@ -236,7 +239,7 @@ main()
     global_path.push_back(referencePose(i * 0.05));
   }
 
-  logPath(rec, "world/path/global", global_path, blue, 0.006f, 0.005f);
+  logPath(rec, "world/path/global", global_path, blue, 0.006F, 0.005F);
 
   Path actual_history;
   std::deque<Pose2D> footprint_history;
@@ -249,7 +252,7 @@ main()
 
     bool const rotating = frame >= 240 && frame < 320;
 
-    double x;
+    double x = NAN;
     if(frame < 240)
     {
       x = frame * 0.025;
@@ -289,14 +292,14 @@ main()
       }
     }
 
-    logPath(rec, "world/path/local/line", local_path, orange, 0.014f, 0.02f);
+    logPath(rec, "world/path/local/line", local_path, orange, 0.014F, 0.02F);
 
     logHeadings(rec,
                 "world/path/local/headings",
                 local_path,
                 orange,
-                0.22f,
-                0.03f);
+                0.22F,
+                0.03F);
 
     // 3. 实际轨迹：按位置或航向变化采样。
     // 原地旋转时仍记录姿态，使朝向箭头能表达旋转。
@@ -311,15 +314,15 @@ main()
             "world/path/actual/line",
             actual_history,
             green,
-            0.010f,
-            0.025f);
+            0.010F,
+            0.025F);
 
     logHeadings(rec,
                 "world/path/actual/headings",
                 actual_history,
                 green,
-                0.18f,
-                0.035f);
+                0.18F,
+                0.035F);
 
     // 4. 当前机器人轮廓和车头箭头。
     logRobot(rec, robot);

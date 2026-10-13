@@ -3,8 +3,9 @@
 ## 单个 pdlog 的 local_map 回放
 
 `local_map` 复用 `pdlog` 的 PPMd8 读取器，流式解压单个文件，再解析每行
-日志前缀后的 JSON。只处理 `type` 严格等于 `local_map` 的对象；其 `data`
-再经过 Base64、gzip 和每格 2 bit 的解码。
+日志前缀后的 JSON 及 `move` 标签下的 `navigation result` 运行状态。
+JSON 处理 `type` 严格等于 `local_map`、`foot_print` 和 `global_paths` 的对象；
+`local_map.data` 再经过 Base64、gzip 和每格 2 bit 的解码。
 
 ```bash
 cmake --build build/Debug --target local_map
@@ -14,17 +15,86 @@ cmake --build build/Debug --target local_map
 rerun /tmp/local_map.rrd
 ```
 
-`map_size` 是正方形地图的边长（格），`map_scale` 是米/格，`pos` 是地图中心
-及机器人位置。左下角由 `pos - map_size * map_scale / 2` 计算。沿用原示例的
+`map_size` 是正方形地图的边长（格），`map_scale` 是米/格，`pos` 仅用于地图中心
+定位。左下角由 `pos - map_size * map_scale / 2` 计算。沿用原示例的
 行序约定：解码后第 0 行位于底部。日志未提供旋转，地图按 world 轴对齐。
+机器人轮廓使用 `foot_print.data` 中的 `[[x,y], ...]` 顶点，单位为米，
+直接作为 world 坐标，不叠加地图 `pos`，也不再使用固定八边形。
+顶点必须至少包含三个不同点；已闭合的轮廓保持不变，未闭合的自动连接首尾。
+显示路径仍为 `world/robot/footprint`。
 
-地图使用单通道 `GridMap` 和 `Costmap` 配色，0 类透明。每条有效记录在
-`frame` 时间线上保存一帧，地图和机器人位置同步更新；`log_line` 时间线
-可定位原始文件的行号。默认 Blueprint 选择 `frame`，它表示记录顺序，
-不表示日志前缀中的实际时间间隔。
+按 `foot_print → local_map` 一一配对：先暂存轮廓，遇到下一张地图时一起
+写入同一帧，随后消费该轮廓。中间可夹杂其他类型日志。若连续出现两个轮廓，
+报告前一个未配对并使用最新的；若地图缺少轮廓，保留地图并显式清除旧轮廓。
+损坏的地图或轮廓会使当前待配对轮廓失效，避免错误沿用；文件末尾多余的
+轮廓也会报告为未配对。
 
-损坏的 local_map 记录会打印文件名、行号并跳过；PPMd8 流损坏则终止。
-全部有效且至少输出一帧时返回 0，存在坏帧、没有地图或处理失败时返回 1，
+地图使用单通道 `GridMap` 和 `Costmap` 配色，0 类透明。
+
+### 全局路径
+
+支持 `global_paths` 的 world 坐标折线，单位为米。例如：
+
+```text
+21:40:43 198(84602)D/debug_bridge: {"data":[[-2.66,-1.47],[-2.64,-1.42],[-2.62,-1.38]],"number_of_segment":0,"total_number_of_segments":1,"type":"global_paths"}
+```
+
+显示在 `world/global_paths`，使用绿色细线，Z=0.04 m，略高于地图。
+保留点序、重复点和折返，不自动闭合、不简化，也不叠加地图或机器人位姿。
+现有 Blueprint 的 `/world/**` 过滤器会自动包含路径，无需新建视图。
+单点段额外用 `world/global_paths/singletons` 的点显示。
+
+分段编号从 0 开始，必须满足 `0 <= number_of_segment < total_number_of_segments`：
+
+- 0 号段开始一组新的路径，`total_number_of_segments=1` 时立即更新。
+- 多段收齐后按编号一次更新；各段为独立折线，不跨段连线。收集过程中保留上一组完整路径。
+- 收到 0 号段后，其余段可乱序到达，同编号重发替换该段。再次收到 0 号段则重新开始。
+- 缺失 0 号段、段数不一致、损坏的顶点或文件结束时未收齐，都会报告错误。
+  协议没有规划 ID，无法可靠识别多组路径交错发送；默认一组的 0 号段先到。
+- 完整一组的所有 `data` 都为空时清除旧路径；多段中的空段仍保留其编号。
+
+路径按收齐消息的 `robot_time` / `log_line` 更新，不依赖地图帧，不消费待配对轮廓。
+新路径替换旧路径，不累加到当前画面；拖动时间游标仍可查看历史路径。
+
+### 运行状态与速度
+
+支持如下文本记录，两个速度分别按线速度 `m/s` 和角速度 `rad/s` 显示，
+保留原始正负号，不做单位换算：
+
+```text
+21:43:12 455(84642)D/move: navigation result speed:-0.0677626 -0.0937527 status:Navigating
+```
+
+默认 Blueprint 左侧显示地图，右侧依次显示：
+
+- **Robot State / State History**：切换查看时间游标处最近一次状态、两个速度、
+  来源时间/行号，或全部原始状态日志。Navigating 蓝色，Escaping 黄色，
+  Stuck/FailEscape 红色；未知状态保留名称并以灰色记录。颜色用于历史日志。
+- **Linear Speed (m/s)**：线速度阶梯曲线，保持上一采样值直到下一次记录。
+- **Angular Speed (rad/s)**：角速度曲线。两种单位分开显示，避免共用纵轴。
+
+两张曲线图联动缩放时间轴，默认收起 Selection 面板以留出显示空间。
+
+实体位于 `navigation/current`、`navigation/events`、`navigation/linear_speed`、
+`navigation/angular_speed`，与 `world` 空间实体分开，方便自定义 Blueprint。
+每条有效状态独立记录，不等待地图，不丢弃地图间的多条速度记录。
+状态记录（包括坏记录）不会消费待配对的轮廓。
+
+默认选择共用的 `robot_time` 时间线：从 `HH:mm:ss 毫秒` 前缀读取时间，
+表示从首日午夜起的时长，保留真实时间间隔。地图和配对轮廓一起使用地图行时间；
+状态和速度使用各自记录时间。拖动游标时，地图、轮廓和状态分别显示该时刻之前
+最近一次有效数据；图表保留速度历史。因此状态来源时间可能早于当前地图时间。
+支持跨午夜及少量乱序，以距已知最新时间最近的一天解释日期（日志没有日期，
+无法区分超过 12 小时的间隔与跨天乱序）。
+
+`log_line` 提供所有数据的原始行号时间线；`frame` 仅保留地图帧序号，
+查看状态与地图联动时请选择 `robot_time` 或 `log_line`。同一毫秒多条记录
+仍被保存，需精确按文件顺序定位时使用 `log_line`。缺少有效时间前缀的记录
+会警告并仅参与 `log_line`（地图另有 `frame`），不会错误沿用上一行时间。
+
+损坏的 local_map/foot_print/navigation/global_paths 记录会打印文件名、行号并跳过；PPMd8 流损坏则终止。
+全部有效、配对完整且至少输出一帧地图、一条状态或一组路径时返回 0（支持仅路径日志），
+存在坏记录、未配对、没有有效数据或处理失败时返回 1，
 命令行错误返回 2。坏帧前后有效的数据仍可在已生成的记录中查看。
 输入输出不能指向同一个文件。
 
@@ -32,9 +102,68 @@ rerun /tmp/local_map.rrd
 修改 `local_map_blueprint.py` 后用项目 Python 环境运行它以重新生成 `.rbl`。
 
 ```bash
-cmake --build build/Debug --target local_map_log_test
-ctest --test-dir build/Debug -R '^local_map_log_test$' --output-on-failure
+cmake --build build/Debug --target local_map_log_test navigation_log_test global_paths_log_test
+ctest --test-dir build/Debug -R '^(local_map_log|navigation_log|global_paths_log)_test$' --output-on-failure
 ```
+
+## 从 Rerun 当前时刻直接导出 JSON
+
+现在的导出脚本直接查询 Rerun 数据，不再读取 `.pdlog`，也不调用 C++ 日志导出器。
+命令只需要输出路径：
+
+```bash
+.venv/bin/python tools/pdlog/export_current_frame.py /tmp/frame.json
+```
+
+在 Viewer 中选择 **robot_time** 或 **log_line** 时间线，暂停到目标时刻后运行命令。
+脚本通过 MCP 读取游标，然后通过 catalog 的单点 latest-at 查询取数，仅请求当前
+记录、选定时刻及所需组件；不会把全部历史地图下载到 Python 再筛选。
+
+**当前版本的实时流限制：** C++ `rec.spawn()` 送入 Viewer 的 SDK proxy 记录，
+不在 Viewer 的可查询 catalog 中。对已经打开的这类记录，先 `Ctrl+S` 保存为
+`.rrd`，再在 Viewer 中打开该 `.rrd` 并选择它，之后可以反复直接导出，不需要原日志。
+脚本遇到 proxy 记录会给出明确提示，不会偷偷退回读取 `.pdlog`。
+也可首次运行时就生成 Rerun 记录，再打开：
+
+```bash
+./build/Debug/tools/pdlog_build/local_map xx.pdlog --save /tmp/map.rrd
+rerun /tmp/map.rrd
+```
+
+使用项目 `.venv` 中的 Rerun Python SDK、PyArrow、DataFusion。已验证 Python SDK
+0.38.1 与 Viewer 0.39.0 的组合。`--viewer http://127.0.0.1:9876` 指定 Viewer 地址，
+`--rerun /path/to/rerun` 可指定支持 `viewer-mcp` 的 CLI。
+
+也可保持当前记录，显式指定查询时刻（不移动 Viewer 游标）：
+
+```bash
+# 21:43:12.455，单位为从首日午夜起的整数纳秒。
+.venv/bin/python tools/pdlog/export_current_frame.py frame.json \
+  --timeline robot_time --at 78192455000000
+# 或按原始行号时间线查询。
+.venv/bin/python tools/pdlog/export_current_frame.py frame.json \
+  --timeline log_line --at 12345
+```
+
+JSON 包含：
+
+- `selection` / `viewer_recording`：选定时间与记录；`data_source` 为 `rerun`。
+- `local_map`：二维 `data[row][col]`、宽高、分辨率、地图中心、原点及旋转。
+  将显示索引 `0/32/192/254` 无损映射回 **0～3**，恢复**第 0 行在底部**的行序。
+  其他像素格式或未知色图索引会报错，避免误导出。
+- `foot_print`：world 坐标 `data`（XY）以及 Viewer 实际存储的 `data_xyz`。
+  后者包含绘图时添加的 Z 高度；轮廓缺失或已清除时为 `null`。
+- `navigation`：两个 Scalars 组件中的速度，及当前状态文本中的状态名称；
+  选定时刻没有对应数据时为 `null`。
+- `global_paths`：当前完整路径的 `segments` 数组，按 `number_of_segment` 编号，
+  每段包含 XY `data` 和 Rerun 中的 `data_xyz`；没有路径或已清除时为 `null`。
+
+坐标与分辨率保留的是 **Rerun 存储的 float 精度**，不再追溯原日志 double 数值。
+地图和状态各自取游标时刻之前最近的值，与 Viewer 一致，二者不必同一采样时刻。
+状态文本只用于提取状态名称，速度从数值组件获取，不从格式化文本反推。
+已有 JSON 不会被覆盖；没有有效地图时不生成文件。
+
+原来的 `local_map_export` C++ 命令仍作为离线日志导出工具保留，但不参与上述流程。
 
 ## 目录批量过滤
 
